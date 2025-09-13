@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens via CSS variables */
+:root {
+  --bg: #FCF4FF; /* light background */
+  --surface: #FFFFFF; /* light surface */
+  --dark: #121212; /* dark text for light mode */
+  --primary: #A788AF; /* light primary */
+  --paper: #FFFF88; /* sticky notes */
+  --border: #e4e2ff; /* subtle border for light */
+}
+
+.dark {
+  --bg: #0B0B0D; /* dark background */
+  --surface: #121216; /* dark surface */
+  --dark: #F5F5F6; /* light text for dark mode */
+  --primary: #B79AC1; /* dark primary */
+  --paper: #FFF07A; /* sticky notes in dark */
+  --border: #EDEBFF25; /* translucent border */
+}
+
+/* Base styles */
+* { @apply border-border; }
+html { scroll-behavior: smooth; }
+body { @apply bg-bg text-dark antialiased; }
+
+/* Focus visibility and rings */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Skip link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--primary);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  z-index: 50;
+  transition: top 0.2s ease;
+}
+.skip-link:focus { top: 8px; }
+
+/* Selection */
+::selection {
+  background: color-mix(in srgb, var(--primary) 30%, transparent);
+}
+
