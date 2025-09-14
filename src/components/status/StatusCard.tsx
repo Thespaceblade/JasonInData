@@ -2,13 +2,14 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-type Tone = "navy" | "grey" | "white" | "carolina";
+type Tone = "navy" | "grey" | "white" | "carolina" | "dark";
 
 const toneBg: Record<Tone, string> = {
   navy: "bg-[#091a2f]",
   grey: "bg-[#cfcfcf]",
   white: "bg-[#f7f9fb]",
   carolina: "bg-[#4B9CD3]",
+  dark: "bg-[#1a1a1a]",
 };
 
 export interface StatusCardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -19,13 +20,20 @@ export function StatusCard({ tone = "white", className, children, ...props }: St
   return (
     <div
       className={cn(
-        "rounded-2xl border-2 border-dark p-5 text-dark shadow-sm",
+        "relative isolate rounded-2xl border-2 border-dark p-5 text-dark shadow-sm",
+        "transition-colors duration-300 group-hover:border-[#0a1a2f]",
         toneBg[tone],
         className
       )}
       {...props}
     >
-      {children}
+      {/* Sliding navy overlay for invert effect */}
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-2xl">
+        <span className="absolute inset-y-0 left-0 w-0 bg-[#0a1a2f] transition-all duration-300 group-hover:w-full" />
+      </div>
+      <div className="relative z-10 text-lg sm:text-xl md:text-2xl font-semibold leading-snug transition-colors duration-300 group-hover:text-white">
+        {children}
+      </div>
     </div>
   );
 }
@@ -36,7 +44,7 @@ export function Pill({ className, children, ...props }: PillProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-2 rounded-full bg-dark px-3 py-1 text-lg font-semibold text-surface leading-none",
+        "inline-flex items-center gap-2 rounded-full bg-dark px-3 py-1 text-base sm:text-lg md:text-xl font-semibold text-surface leading-none",
         className
       )}
       {...props}

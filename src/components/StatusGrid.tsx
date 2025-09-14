@@ -27,22 +27,34 @@ export function StatusGrid() {
       variants={container}
       initial="hidden"
       animate="show"
-      className="grid grid-cols-1 gap-5 sm:grid-cols-2"
+      className="grid grid-cols-1 gap-6 sm:grid-cols-2 [--status-size:theme(spacing.56)] sm:[--status-size:theme(spacing.64)]"
     >
-      <motion.div variants={item} className="col-span-1 aspect-square">
-        <StatusCard tone="grey" className="h-full text-base md:text-lg">
+      <motion.div
+        variants={item}
+        className="group col-span-1 aspect-square h-[var(--status-size)]"
+        whileHover={{ scale: 1.03 }}
+      >
+        <StatusCard tone="grey" className="h-full">
           has <Pill className="ml-1 mr-2">{batteryPct}%</Pill> battery left
         </StatusCard>
       </motion.div>
-      <motion.div variants={item} className="col-span-1 aspect-square">
-        <StatusCard tone="grey" className="h-full text-base md:text-lg">
+      <motion.div
+        variants={item}
+        className="group col-span-1 aspect-square h-[var(--status-size)]"
+        whileHover={{ scale: 1.03 }}
+      >
+        <StatusCard tone="grey" className="h-full">
           was listening to
           <br />
           <Pill className="mt-1 inline-flex">{lastTrack}</Pill>
         </StatusCard>
       </motion.div>
-      <motion.div variants={item} className="sm:col-span-2 h-[200px]">
-        <StatusCard tone="grey" className="h-full text-base md:text-lg">
+      <motion.div
+        variants={item}
+        className="group sm:col-span-2 h-[var(--status-size)]"
+        whileHover={{ scale: 1.03 }}
+      >
+        <StatusCard tone="grey" className="h-full">
           is <Pill className="mx-2">{fmt.format(ageSeconds)}</Pill> seconds old! My next solar orbit is in
           <Pill className="mx-2">{daysToNext}</Pill> days
         </StatusCard>

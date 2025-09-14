@@ -20,15 +20,15 @@ export function ConnectSection() {
   return (
     <section aria-labelledby="connect-title" id="connect" className="py-16">
       <div className="mx-auto max-w-7xl px-4">
-        <h2 id="connect-title" className="mb-6 font-display text-8xl font-semibold">
+        <h1 id="connect-title" className="mb-6 font-display text-8xl font-semibold text-center">
           Connect
-        </h2>
+        </h1>
         <motion.div
           variants={container}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-40px" }}
-          className="inline-grid grid-cols-3 gap-6 sm:grid-cols-6 mx-auto justify-items-center"
+          className="mx-auto max-w-3xl flex flex-wrap justify-center gap-6"
         >
           <motion.div variants={item}>
             <IconTile

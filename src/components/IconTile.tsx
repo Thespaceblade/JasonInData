@@ -30,24 +30,17 @@ export function IconTile({ href, icon, label, external, className }: IconTilePro
       {...anchorProps}
       className={cn("group relative block outline-none", className)}
     >
-      {/* Underlay */}
-      <div
-        aria-hidden
-        className={cn(
-          "absolute inset-0 -z-10 rounded-lg bg-dark transition-transform duration-200 ease-in-out-soft",
-          "group-focus:-translate-x-0 group-focus:-translate-y-0",
-          "-translate-x-2 -translate-y-2 group-hover:-translate-x-3 group-hover:-translate-y-3"
-        )}
-      />
       {/* Tile */}
       <div
         className={cn(
-          "flex h-24 w-24 items-center justify-center rounded-lg border border-border bg-surface text-dark",
-          "transition-colors duration-200 group-hover:bg-[color-mix(in_srgb,var(--surface)_90%,var(--primary)_10%)]",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+          "flex items-center justify-center rounded-full border border-border bg-surface text-dark",
+          "h-16 w-16 md:h-20 md:w-20",
+          "transition-transform transition-colors duration-200",
+          "hover:scale-105 focus-visible:scale-105 hover:bg-white/10",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
         )}
       >
-        <div aria-hidden className="h-16 w-16 md:h-20 md:w-20">
+        <div aria-hidden className="h-8 w-8">
           {renderedIcon}
         </div>
         <span className="sr-only">{label}</span>

@@ -69,12 +69,18 @@ export default function HeroSection() {
             <div className="w-full max-w-xl text-center">
               {/* Profile + Orbit (centered) */}
               <div
-                className="relative mx-auto grid h-64 w-64 place-items-center sm:h-72 sm:w-72"
+                className="relative mx-auto grid h-96 w-96 place-items-center sm:h-[28rem] sm:w-[28rem]"
                 onPointerEnter={() => setHovered(true)}
                 onPointerLeave={() => setHovered(false)}
               >
-                {/* Circular image */}
-                <div className="relative h-48 w-48 overflow-hidden rounded-full border-2 border-dark shadow-lg sm:h-56 sm:w-56">
+                {/* Circular image with coin-flip */}
+                <motion.div
+                  style={{ transformPerspective: 800 }}
+                  initial={{ rotateY: 0 }}
+                  animate={hovered ? { rotateY: 180 } : { rotateY: 0 }}
+                  transition={{ duration: 0.6, ease: "easeInOut" }}
+                  className="relative h-72 w-72 overflow-hidden rounded-full border-2 border-dark shadow-lg sm:h-80 sm:w-80"
+                >
                   <AnimatePresence mode="wait">
                     <motion.img
                       key={profileImages[imgIndex]}
@@ -102,7 +108,7 @@ export default function HeroSection() {
                       Connect with me!
                     </span>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Orbit icons anchored at image center */}
                 <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -171,11 +177,15 @@ export default function HeroSection() {
                 </div>
               </div>
 
-              <h1 id="hero-title" className="mt-8 font-display text-5xl md:text-xl font-bold tracking-tight">
-                Hi, I’m Jason.
-              </h1>
-              <p className="mx-auto max-w-2xl text-lg text-white/80">a student from north carolina</p>
-              <div className="flex items-center justify-center gap-7 pt-2">
+              <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4 text-center md:text-left">
+                <h1 id="hero-title" className="font-display text-6xl sm:text-7xl font-bold tracking-tight">
+                  Hi, I’m Jason.
+                </h1>
+                <p className="text-lg sm:text-xl text-white/80 max-w-xl leading-relaxed mx-auto md:mx-0">
+                  a student from north carolina
+                </p>
+              </div>
+              <div className="flex items-center justify-center md:justify-start gap-7 pt-2">
                 <Button asChild aria-label="Connect with Jason">
                   <a href="#connect">Connect</a>
                 </Button>

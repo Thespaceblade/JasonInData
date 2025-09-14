@@ -5,6 +5,7 @@ import StickyNote from "@/components/StickyNote";
 export type NoteListProps = {
   title: string;
   items: string[];
+  headingClassName?: string;
 };
 
 function deterministicTilt(index: number) {
@@ -13,7 +14,7 @@ function deterministicTilt(index: number) {
   return Math.round(base * 10) / 10; // one decimal place for stability
 }
 
-export function NoteList({ title, items }: NoteListProps) {
+export function NoteList({ title, items, headingClassName }: NoteListProps) {
   const reduce = useReducedMotion();
   return (
     <section aria-labelledby={`${title.toLowerCase().replace(/\s+/g, "-")}-title`} className="py-8">
@@ -24,7 +25,7 @@ export function NoteList({ title, items }: NoteListProps) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-40px" }}
           transition={{ duration: 0.5 }}
-          className="mb-4 font-display text-2xl font-semibold"
+          className={"mb-4 font-display text-2xl font-semibold" + (headingClassName ? ` ${headingClassName}` : "")}
         >
           {title}
         </motion.h2>
@@ -41,4 +42,3 @@ export function NoteList({ title, items }: NoteListProps) {
 }
 
 export default NoteList;
-
