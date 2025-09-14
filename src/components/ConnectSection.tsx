@@ -19,8 +19,8 @@ const item = {
 export function ConnectSection() {
   return (
     <section aria-labelledby="connect-title" id="connect" className="py-16">
-      <div className="mx-auto max-w-5xl px-4">
-        <h2 id="connect-title" className="mb-6 font-display text-2xl font-semibold">
+      <div className="mx-auto max-w-7xl px-4">
+        <h2 id="connect-title" className="mb-6 font-display text-8xl font-semibold">
           Connect
         </h2>
         <motion.div

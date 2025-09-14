@@ -1,28 +1,28 @@
 "use client";
-
-import * as React from "react";
-import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import StatusGrid from "@/components/StatusGrid";
-import { ChevronDown, Github, Linkedin, Mail, Twitter, CalendarDays } from "lucide-react";
+import { Github, Linkedin, Mail, Twitter, CalendarDays } from "lucide-react";
+import * as React from "react";
 
-export default function HeroSection() {
+export type HeroSectionClientProps = {
+  images: string[];
+};
+
+export default function HeroSectionClient({ images }: HeroSectionClientProps) {
   const reduce = useReducedMotion();
   const [hovered, setHovered] = React.useState(false);
   const [imgIndex, setImgIndex] = React.useState(0);
 
-  // Helper to position orbiting icons
   function polar(radius: number, angleDeg: number) {
     const a = (angleDeg * Math.PI) / 180;
     return { x: Math.cos(a) * radius, y: Math.sin(a) * radius };
   }
 
-  // Desktop: five icons around a circle, evenly spaced
-  const desktopAngles = [-90, -18, 54, 126, 198];
+  const desktopAngles = [-90, -90 + 72, -90 + 144, -90 + 216, -90 + 288];
   const desktopRadius = 140;
   const desktopPositions = desktopAngles.map((ang) => polar(desktopRadius, ang));
 
-  // Mobile: compact vertical fan
   const mobilePositions = [
     { x: 0, y: -96 },
     { x: 0, y: -48 },
@@ -34,26 +34,19 @@ export default function HeroSection() {
   const orbitLinks = [
     { href: "https://www.linkedin.com/in/jasoncharwin05", label: "LinkedIn", icon: <Linkedin /> },
     { href: "https://github.com/Thespaceblade", label: "GitHub", icon: <Github /> },
-    { href: "mailto:jason.charwin360@gmail.com", label: "Email", icon: <Mail /> },
+    { href: "mailto:charwin.jason@proton.me", label: "Email", icon: <Mail /> },
     { href: "#", label: "Twitter", icon: <Twitter /> },
     { href: "#", label: "Calendar", icon: <CalendarDays /> },
   ];
 
-  // 2x larger bubbles, icons centered
   const iconBaseClasses =
     "flex h-20 w-20 items-center justify-center rounded-full border border-border bg-surface text-dark shadow-sm transition-colors hover:bg-[color-mix(in_srgb,var(--surface)_90%,var(--primary)_10%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg";
 
-  // Rotating profile images (place in /public)
-  const profileImages = React.useMemo(
-    () => ["/profile-1.jpg", "/profile-2.jpg", "/profile-3.jpg", "/profile-4.jpg", "/profile-5.jpg"],
-    []
-  );
-
   React.useEffect(() => {
-    if (reduce) return;
-    const id = setInterval(() => setImgIndex((i) => (i + 1) % profileImages.length), 4000);
+    if (reduce || images.length <= 1) return;
+    const id = setInterval(() => setImgIndex((i) => (i + 1) % images.length), 4000);
     return () => clearInterval(id);
-  }, [profileImages.length, reduce]);
+  }, [images.length, reduce]);
 
   return (
     <section aria-labelledby="hero-title" className="bg-[#0a1a2f] text-white">
@@ -64,29 +57,26 @@ export default function HeroSection() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="min-h-screen grid grid-cols-1 md:grid-cols-2"
         >
-          {/* Left half: profile + orbit + text/CTAs */}
+          {/* Left: Image + orbit + text */}
           <div className="flex items-center justify-center py-16">
             <div className="w-full max-w-xl text-center">
-              {/* Profile + Orbit (centered) */}
               <div
                 className="relative mx-auto grid h-64 w-64 place-items-center sm:h-72 sm:w-72"
                 onPointerEnter={() => setHovered(true)}
                 onPointerLeave={() => setHovered(false)}
               >
-                {/* Circular image */}
+                {/* Circular image (grayscale) with overlapping crossfade */}
                 <div className="relative h-48 w-48 overflow-hidden rounded-full border-2 border-dark shadow-lg sm:h-56 sm:w-56">
-                  <AnimatePresence mode="wait">
+                  <AnimatePresence initial={false} mode="sync">
                     <motion.img
-                      key={profileImages[imgIndex]}
-                      src={profileImages[imgIndex]}
+                      key={images[imgIndex]}
+                      src={images[imgIndex]}
                       alt="Jason Charwin profile"
-                      className={`absolute inset-0 h-full w-full object-cover transition duration-300 ${
-                        hovered ? "blur-[2px]" : "blur-0"
-                      }`}
+                      className={`absolute inset-0 h-full w-full object-cover grayscale transition duration-300 ${hovered ? "blur-[2px]" : "blur-0"}`}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      transition={{ duration: 0.4 }}
+                      transition={{ duration: 0.6, ease: "easeInOut" }}
                     />
                   </AnimatePresence>
                   <div
@@ -106,7 +96,6 @@ export default function HeroSection() {
 
                 {/* Orbit icons anchored at image center */}
                 <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                  {/* Desktop: circular layout */}
                   <div className="hidden md:block">
                     {orbitLinks.map((l, i) => {
                       const target = desktopPositions[i];
@@ -137,7 +126,6 @@ export default function HeroSection() {
                       );
                     })}
                   </div>
-                  {/* Mobile: vertical fan */}
                   <div className="md:hidden">
                     {orbitLinks.map((l, i) => {
                       const target = mobilePositions[i];
@@ -171,11 +159,9 @@ export default function HeroSection() {
                 </div>
               </div>
 
-              <h1 id="hero-title" className="mt-8 font-display text-5xl md:text-xl font-bold tracking-tight">
-                Hi, I’m Jason.
-              </h1>
+              <h1 id="hero-title" className="mt-8 font-display text-5xl sm:text-6xl font-bold tracking-tight">Hi, I’m Jason.</h1>
               <p className="mx-auto max-w-2xl text-lg text-white/80">a student from north carolina</p>
-              <div className="flex items-center justify-center gap-7 pt-2">
+              <div className="flex items-center justify-center gap-3 pt-2">
                 <Button asChild aria-label="Connect with Jason">
                   <a href="#connect">Connect</a>
                 </Button>
@@ -193,18 +179,8 @@ export default function HeroSection() {
             </div>
           </div>
         </motion.div>
-
-        {/* Chevron to Highlights */}
-        <div className="mt-12 flex justify-center">
-          <a
-            href="#highlights"
-            aria-label="Scroll to highlights"
-            className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface text-dark transition-colors hover:bg-[color-mix(in_srgb,var(--surface)_92%,var(--primary)_8%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-          >
-            <ChevronDown className="h-6 w-6" />
-          </a>
-        </div>
       </div>
     </section>
   );
 }
+

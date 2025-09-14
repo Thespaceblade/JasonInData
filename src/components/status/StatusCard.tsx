@@ -2,19 +2,20 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-type Tone = "lavender" | "mauve" | "slate";
+type Tone = "navy" | "grey" | "white" | "carolina";
 
 const toneBg: Record<Tone, string> = {
-  lavender: "bg-[#F1E8FF]",
-  mauve: "bg-[#FCE7F3]",
-  slate: "bg-[#F1F5F9]",
+  navy: "bg-[#091a2f]",
+  grey: "bg-[#cfcfcf]",
+  white: "bg-[#f7f9fb]",
+  carolina: "bg-[#4B9CD3]",
 };
 
 export interface StatusCardProps extends React.HTMLAttributes<HTMLDivElement> {
   tone?: Tone;
 }
 
-export function StatusCard({ tone = "lavender", className, children, ...props }: StatusCardProps) {
+export function StatusCard({ tone = "white", className, children, ...props }: StatusCardProps) {
   return (
     <div
       className={cn(
