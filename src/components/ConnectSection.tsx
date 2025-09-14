@@ -20,7 +20,7 @@ export function ConnectSection() {
   return (
     <section aria-labelledby="connect-title" id="connect" className="py-16">
       <div className="mx-auto max-w-7xl px-4">
-        <h1 id="connect-title" className="mb-6 font-display text-8xl font-semibold text-center">
+        <h1 id="connect-title" className="mb-6 font-display text-8xl font-extrabold text-center">
           Connect
         </h1>
         <motion.div

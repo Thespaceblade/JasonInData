@@ -79,7 +79,7 @@ export default function HeroSection() {
                   initial={{ rotateY: 0 }}
                   animate={hovered ? { rotateY: 180 } : { rotateY: 0 }}
                   transition={{ duration: 0.6, ease: "easeInOut" }}
-                  className="relative h-72 w-72 overflow-hidden rounded-full border-2 border-dark shadow-lg sm:h-80 sm:w-80"
+                  className="relative h-72 w-72 overflow-hidden rounded-full border-4 border-white shadow-lg sm:h-80 sm:w-80"
                 >
                   <AnimatePresence mode="wait">
                     <motion.img
