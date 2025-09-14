@@ -28,7 +28,7 @@ export function ConnectSection() {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-40px" }}
-          className="grid grid-cols-3 gap-6 sm:grid-cols-6"
+          className="inline-grid grid-cols-3 gap-6 sm:grid-cols-6 mx-auto justify-items-center"
         >
           <motion.div variants={item}>
             <IconTile
@@ -67,4 +67,3 @@ export function ConnectSection() {
 }
 
 export default ConnectSection;
-

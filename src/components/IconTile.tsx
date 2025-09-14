@@ -12,9 +12,16 @@ type IconTileProps = {
 };
 
 export function IconTile({ href, icon, label, external, className }: IconTileProps) {
-  const anchorProps = external
-    ? { target: "_blank", rel: "noreferrer noopener" }
-    : {};
+  const anchorProps = external ? { target: "_blank", rel: "noreferrer noopener" } : {};
+
+  // Ensure the provided icon fills the tile and is centered
+  const renderedIcon = React.isValidElement(icon)
+    ? React.cloneElement(icon as React.ReactElement<any>, {
+        className: cn((icon as any).props?.className, "h-full w-full"),
+        "aria-hidden": true,
+        focusable: false,
+      })
+    : icon;
 
   return (
     <Link
@@ -40,9 +47,9 @@ export function IconTile({ href, icon, label, external, className }: IconTilePro
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         )}
       >
-        <span aria-hidden className="h-6 w-6">
-          {icon}
-        </span>
+        <div aria-hidden className="h-16 w-16 md:h-20 md:w-20">
+          {renderedIcon}
+        </div>
         <span className="sr-only">{label}</span>
       </div>
     </Link>
@@ -50,4 +57,3 @@ export function IconTile({ href, icon, label, external, className }: IconTilePro
 }
 
 export default IconTile;
-

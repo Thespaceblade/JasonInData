@@ -29,20 +29,20 @@ export function StatusGrid() {
       animate="show"
       className="grid grid-cols-1 gap-5 sm:grid-cols-2"
     >
-      <motion.div variants={item}>
-        <StatusCard tone="mauve" className="text-base sm:text-lg">
+      <motion.div variants={item} className="col-span-1 aspect-square">
+        <StatusCard tone="mauve" className="h-full text-base sm:text-lg">
           has <Pill className="ml-1 mr-2">{batteryPct}%</Pill> battery left
         </StatusCard>
       </motion.div>
-      <motion.div variants={item}>
-        <StatusCard tone="slate" className="text-base sm:text-lg">
+      <motion.div variants={item} className="col-span-1 aspect-square">
+        <StatusCard tone="slate" className="h-full text-base sm:text-lg">
           was listening to
           <br />
           <Pill className="mt-1 inline-flex">{lastTrack}</Pill>
         </StatusCard>
       </motion.div>
-      <motion.div variants={item} className="sm:col-span-2">
-        <StatusCard tone="slate" className="text-base sm:text-lg">
+      <motion.div variants={item} className="sm:col-span-2 h-[200px]">
+        <StatusCard tone="slate" className="h-full text-base sm:text-lg">
           is <Pill className="mx-2">{fmt.format(ageSeconds)}</Pill> seconds old! My next solar orbit is in
           <Pill className="mx-2">{daysToNext}</Pill> days
         </StatusCard>
@@ -52,4 +52,3 @@ export function StatusGrid() {
 }
 
 export default StatusGrid;
-
