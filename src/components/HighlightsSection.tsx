@@ -23,17 +23,16 @@ const notes = {
 
 export default function HighlightsSection() {
   return (
-    <section aria-labelledby="highlights-title" id="highlights" className="bg-gray-100 text-dark py-20">
+    <section aria-labelledby="highlights-title" id="highlights" className="py-16 bg-gray-50">
       <div className="mx-auto max-w-7xl px-4">
-        <h1 id="highlights-title" className="mb-6 font-display text-8xl font-extrabold text-center">
+        <h1 id="connect-title" className="mb-6 font-display text-8xl font-semibold text-center">
           Highlights
         </h1>
-        <div className="mx-auto max-w-5xl">
-          <NoteList title="I am" items={notes.iAm} headingClassName="text-center" />
-          <NoteList title="I built" items={notes.iBuilt} headingClassName="text-center" />
-          <NoteList title="I have" items={notes.iHave} headingClassName="text-center" />
-        </div>
       </div>
+      <NoteList title="I am" items={notes.iAm} />
+      <NoteList title="I built" items={notes.iBuilt} />
+      <NoteList title="I have" items={notes.iHave} />
     </section>
   );
 }
+
