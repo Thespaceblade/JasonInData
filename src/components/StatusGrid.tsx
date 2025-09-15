@@ -28,7 +28,7 @@ function MarqueeTitle({ text }: { text: string }) {
   if (delta <= 0) {
     return (
       <div className="truncate" ref={containerRef}>
-        <div ref={textRef}>{text}</div>
+        <div ref={textRef} className="whitespace-nowrap">{text}</div>
       </div>
     );
   }
@@ -39,6 +39,7 @@ function MarqueeTitle({ text }: { text: string }) {
     <div ref={containerRef} className="overflow-hidden">
       <motion.div
         ref={textRef}
+        className="whitespace-nowrap"
         initial={{ x: 0 }}
         animate={{ x: -delta }}
         transition={{ duration, ease: "linear", repeat: Infinity, repeatType: "reverse" }}
@@ -72,32 +73,34 @@ export default function StatusGrid() {
         </StatusCard>
       </motion.div>
 
-      {/* Top-right: SPOTIFY (REPLACED CONTENT) */}
+      {/* Top-right: SPOTIFY (centered cover + scrolling title/artist underneath) */}
       <motion.div whileHover={{ scale: 1.03 }}>
         <StatusCard tone="grey" className="h-full">
           {track?.title ? (
-            <div className="flex items-center gap-4">
-              {track.albumImageUrl ? (
-                <img
-                  src={track.albumImageUrl}
-                  alt={track.title ?? "Album cover"}
-                  className="h-20 w-20 rounded-md object-cover flex-shrink-0"
-                />)
-              : (
-                <div className="h-20 w-20 rounded-md bg-black/10 flex-shrink-0" />
-              )}
-              <div className="min-w-0 flex-1">
+            <div className="flex h-full flex-col items-center justify-center text-center">
+              <div className="mb-3 opacity-80">was listening to</div>
+              <a
+                href={track.url ?? "#"}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={`Open ${track.title} on Spotify`}
+                className="group/cover relative block"
+              >
+                {track.albumImageUrl ? (
+                  <img
+                    src={track.albumImageUrl}
+                    alt={track.title ?? "Album cover"}
+                    className="h-24 w-24 sm:h-28 sm:w-28 md:h-32 md:w-32 rounded-md object-cover shadow transition-transform duration-300 ease-out group-hover/cover:scale-105"
+                  />
+                ) : (
+                  <div className="h-24 w-24 sm:h-28 sm:w-28 md:h-32 md:w-32 rounded-md bg-black/10" />
+                )}
+                <span className="pointer-events-none absolute inset-0 rounded-md ring-0 transition duration-300 group-hover/cover:ring-2 group-hover/cover:ring-white/40 group-hover/cover:bg-black/10" />
+              </a>
+              <div className="mt-3 w-full max-w-[80%]">
                 <div className="font-semibold">
-                  <MarqueeTitle text={track.title} />
+                  <MarqueeTitle text={`${track.title} — ${track.artist ?? ""}`} />
                 </div>
-                <div className="text-sm opacity-70 truncate">{track.artist}</div>
-                <a
-                  href={track.url ?? "#"}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={`Open ${track.title} on Spotify`}
-                  className="sr-only"
-                >Open on Spotify</a>
               </div>
             </div>
           ) : (
