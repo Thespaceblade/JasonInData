@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Figtree } from "next/font/google";
 import "./globals.css";
+import TopHeading from "@/components/TopHeading";
 
 const figtree = Figtree({
   subsets: ["latin"],
@@ -9,7 +10,7 @@ const figtree = Figtree({
 });
 
 export const metadata: Metadata = {
-  title: "Jason Charwin — Data Science @ UNC Chapel Hill",
+  title: "Jason Charwin - Data Science @ UNC Chapel Hill",
   description:
     "I build human-centered data products—clean pipelines, honest analyses, and UIs people actually use.",
   themeColor: [
@@ -38,10 +39,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`scroll-smooth ${figtree.variable}`}>
       <body className="bg-bg text-dark antialiased">
         <a href="#main" className="skip-link">Skip to main content</a>
-        <header />
+        <header className="bg-[#0a1a2f]">
+          <TopHeading />
+        </header>
         <main id="main">{children}</main>
       </body>
     </html>
   );
 }
-

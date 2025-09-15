@@ -66,15 +66,15 @@ export default function StatusGrid() {
   // You can keep your other cards as they are; here’s a simple 2x2 + wide layout:
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-      {/* Top-left: keep your battery/status/etc. */}
-      <motion.div whileHover={{ scale: 1.03 }}>
+      {/* Top-left: square */}
+      <motion.div className="aspect-square" whileHover={{ scale: 1.03 }}>
         <StatusCard tone="grey" className="h-full text-base sm:text-lg">
-          has <Pill className="mx-2">80%</Pill> battery left
+          has <Pill className="mx-2">--</Pill> ---
         </StatusCard>
       </motion.div>
 
-      {/* Top-right: SPOTIFY (centered cover + scrolling title/artist underneath) */}
-      <motion.div whileHover={{ scale: 1.03 }}>
+      {/* Top-right: square (Spotify) */}
+      <motion.div className="aspect-square" whileHover={{ scale: 1.03 }}>
         <StatusCard tone="grey" className="h-full">
           {track?.title ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
@@ -116,11 +116,11 @@ export default function StatusGrid() {
         </StatusCard>
       </motion.div>
 
-      {/* Bottom wide: keep your existing rectangle content */}
-      <motion.div className="sm:col-span-2" whileHover={{ scale: 1.03 }}>
+      {/* Bottom wide rectangle */}
+      <motion.div className="sm:col-span-2 h-[200px] sm:h-[240px]" whileHover={{ scale: 1.03 }}>
         <StatusCard tone="grey" className="h-full text-base sm:text-lg">
-          is <Pill className="mx-2">60,735,917</Pill> seconds old! My next solar orbit is in
-          <Pill className="mx-2">340</Pill> days
+          is <Pill className="mx-2">---</Pill> ----
+          <Pill className="mx-2">340</Pill> ---
         </StatusCard>
       </motion.div>
     </div>

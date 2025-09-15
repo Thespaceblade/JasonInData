@@ -44,7 +44,7 @@ export function IconTile({ href, icon, label, external, className }: IconTilePro
         <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[inherit]">
           <span className="absolute inset-y-0 left-0 w-0 bg-[#0a1a2f] transition-all duration-300 group-hover:w-full" />
         </div>
-        <div aria-hidden className="relative z-10 h-8 w-8 transition-colors duration-300 group-hover:text-white">
+        <div aria-hidden className="relative z-10 h-8 w-8 transition-colors duration-300 group-hover:text-white flex items-center justify-center">
           {renderedIcon}
         </div>
         <span className="sr-only">{label}</span>

@@ -19,29 +19,29 @@ export default function HeroSection() {
 
   // Desktop: five icons around a circle, evenly spaced
   const desktopAngles = [-90, -18, 54, 126, 198];
-  const desktopRadius = 140;
+  const desktopRadius = 120;
   const desktopPositions = desktopAngles.map((ang) => polar(desktopRadius, ang));
 
   // Mobile: compact vertical fan
   const mobilePositions = [
-    { x: 0, y: -96 },
-    { x: 0, y: -48 },
-    { x: 0, y: 48 },
-    { x: 0, y: 96 },
-    { x: 0, y: 144 },
+    { x: 0, y: -140 },
+    { x: 0, y: -70 },
+    { x: 0, y: 70 },
+    { x: 0, y: 140 },
+    { x: 0, y: 210 },
   ];
 
   const orbitLinks = [
-    { href: "https://www.linkedin.com/in/jasoncharwin05", label: "LinkedIn", icon: <Linkedin /> },
-    { href: "https://github.com/Thespaceblade", label: "GitHub", icon: <Github /> },
-    { href: "mailto:jason.charwin360@gmail.com", label: "Email", icon: <Mail /> },
-    { href: "#", label: "Twitter", icon: <Twitter /> },
-    { href: "#", label: "Calendar", icon: <CalendarDays /> },
+    { href: "https://www.linkedin.com/in/jasoncharwin05", label: "LinkedIn", icon: <Linkedin className="h-full w-full" /> },
+    { href: "https://github.com/Thespaceblade", label: "GitHub", icon: <Github className="h-full w-full" /> },
+    { href: "mailto:jason.charwin360@gmail.com", label: "Email", icon: <Mail className="h-full w-full" /> },
+    { href: "#", label: "Twitter", icon: <Twitter className="h-full w-full" /> },
+    { href: "#", label: "Calendar", icon: <CalendarDays className="h-full w-full" /> },
   ];
 
   // 2x larger bubbles, icons centered
   const iconBaseClasses =
-    "flex h-20 w-20 items-center justify-center rounded-full border border-border bg-surface text-dark shadow-sm transition-colors hover:bg-[color-mix(in_srgb,var(--surface)_90%,var(--primary)_10%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg";
+    "flex h-28 w-28 md:h-32 md:w-32 items-center justify-center rounded-full border border-border bg-surface text-dark shadow-sm transition-colors hover:bg-[color-mix(in_srgb,var(--surface)_90%,var(--primary)_10%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg";
 
   // Rotating profile images (place in /public)
   const profileImages = React.useMemo(
@@ -136,7 +136,7 @@ export default function HeroSection() {
                             aria-label={l.label}
                             className={`${iconBaseClasses} pointer-events-auto -translate-x-1/2 -translate-y-1/2`}
                           >
-                            <span aria-hidden className="h-8 w-8">{l.icon}</span>
+                            <span aria-hidden className="flex items-center justify-center h-12 w-12 md:h-14 md:w-14">{l.icon}</span>
                             <span className="sr-only">{l.label}</span>
                           </a>
                         </motion.div>
@@ -167,7 +167,7 @@ export default function HeroSection() {
                             aria-label={l.label}
                             className={`${iconBaseClasses} pointer-events-auto -translate-x-1/2 -translate-y-1/2`}
                           >
-                            <span aria-hidden className="h-8 w-8">{l.icon}</span>
+                            <span aria-hidden className="flex items-center justify-center h-12 w-12">{l.icon}</span>
                             <span className="sr-only">{l.label}</span>
                           </a>
                         </motion.div>

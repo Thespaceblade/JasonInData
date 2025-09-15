@@ -1,3 +1,5 @@
+"use client";
+import { motion } from "framer-motion";
 import NoteList from "@/components/NoteList";
 
 const notes = {
@@ -24,6 +26,7 @@ const notes = {
 export default function HighlightsSection() {
   return (
     <section aria-labelledby="highlights-title" id="highlights" className="bg-gray-50 text-dark py-20">
+      
       <div className="mx-auto max-w-7xl px-4">
         <h1
           id="highlights-title"
