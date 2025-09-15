@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import StatusGrid from "@/components/StatusGrid";
 import { Github, Linkedin, Mail, Twitter, CalendarDays } from "lucide-react";
+import { cn } from "@/lib/utils";
 import * as React from "react";
 
 export type HeroSectionClientProps = {
@@ -20,15 +21,15 @@ export default function HeroSectionClient({ images }: HeroSectionClientProps) {
   }
 
   const desktopAngles = [-90, -90 + 72, -90 + 144, -90 + 216, -90 + 288];
-  const desktopRadius = 140;
+  const desktopRadius = 180;
   const desktopPositions = desktopAngles.map((ang) => polar(desktopRadius, ang));
 
   const mobilePositions = [
-    { x: 0, y: -96 },
-    { x: 0, y: -48 },
-    { x: 0, y: 48 },
-    { x: 0, y: 96 },
-    { x: 0, y: 144 },
+    { x: 0, y: -128 },
+    { x: 0, y: -64 },
+    { x: 0, y: 64 },
+    { x: 0, y: 128 },
+    { x: 0, y: 192 },
   ];
 
   const orbitLinks = [
@@ -40,7 +41,18 @@ export default function HeroSectionClient({ images }: HeroSectionClientProps) {
   ];
 
   const iconBaseClasses =
-    "flex h-20 w-20 items-center justify-center rounded-full border border-border bg-surface text-dark shadow-sm transition-colors hover:bg-[color-mix(in_srgb,var(--surface)_90%,var(--primary)_10%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg";
+    "flex h-20 w-20 items-center justify-center rounded-full border border-border bg-surface text-dark shadow-sm leading-none transition-colors hover:bg-[color-mix(in_srgb,var(--surface)_90%,var(--primary)_10%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg";
+
+  const renderIcon = (node: React.ReactNode) => {
+    if (React.isValidElement(node)) {
+      return React.cloneElement(node as React.ReactElement<any>, {
+        className: cn((node as any).props?.className, "block h-full w-full"),
+        "aria-hidden": true,
+        focusable: false,
+      });
+    }
+    return node;
+  };
 
   React.useEffect(() => {
     if (reduce || images.length <= 1) return;
@@ -61,12 +73,12 @@ export default function HeroSectionClient({ images }: HeroSectionClientProps) {
           <div className="flex items-center justify-center py-16">
             <div className="w-full max-w-xl text-center">
               <div
-                className="relative mx-auto grid h-64 w-64 place-items-center sm:h-72 sm:w-72"
+                className="relative mx-auto grid h-72 w-72 place-items-center sm:h-80 sm:w-80"
                 onPointerEnter={() => setHovered(true)}
                 onPointerLeave={() => setHovered(false)}
               >
                 {/* Circular image (grayscale) with overlapping crossfade */}
-                <div className="relative h-48 w-48 overflow-hidden rounded-full border-2 border-dark shadow-lg sm:h-56 sm:w-56">
+                <div className="relative h-72 w-72 overflow-hidden rounded-full border-2 border-dark shadow-lg sm:h-80 sm:w-80">
                   <AnimatePresence initial={false} mode="sync">
                     <motion.img
                       key={images[imgIndex]}
@@ -119,7 +131,7 @@ export default function HeroSectionClient({ images }: HeroSectionClientProps) {
                             aria-label={l.label}
                             className={`${iconBaseClasses} pointer-events-auto -translate-x-1/2 -translate-y-1/2`}
                           >
-                            <span aria-hidden className="h-8 w-8">{l.icon}</span>
+                            <span aria-hidden className="block h-8 w-8">{renderIcon(l.icon)}</span>
                             <span className="sr-only">{l.label}</span>
                           </a>
                         </motion.div>
@@ -149,7 +161,7 @@ export default function HeroSectionClient({ images }: HeroSectionClientProps) {
                             aria-label={l.label}
                             className={`${iconBaseClasses} pointer-events-auto -translate-x-1/2 -translate-y-1/2`}
                           >
-                            <span aria-hidden className="h-8 w-8">{l.icon}</span>
+                            <span aria-hidden className="block h-8 w-8">{renderIcon(l.icon)}</span>
                             <span className="sr-only">{l.label}</span>
                           </a>
                         </motion.div>
@@ -183,4 +195,3 @@ export default function HeroSectionClient({ images }: HeroSectionClientProps) {
     </section>
   );
 }
-
