@@ -179,10 +179,10 @@ export default function HeroSection() {
 
               <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4 text-center md:text-left">
                 <h1 id="hero-title" className="font-display text-6xl sm:text-7xl font-bold tracking-tight">
-                  Hi, I’m Jason.
+                  Hi, I’m Jason!
                 </h1>
                 <p className="text-lg sm:text-xl text-white/80 max-w-xl leading-relaxed mx-auto md:mx-0">
-                  a student from north carolina
+                  a data science student at UNC-Chapel Hill
                 </p>
               </div>
               <div className="flex items-center justify-center md:justify-start gap-7 pt-2">
