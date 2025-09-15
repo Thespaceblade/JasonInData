@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-
 const TOKEN_URL = "https://accounts.spotify.com/api/token";
 
 export async function GET(req: Request) {
@@ -33,15 +32,12 @@ export async function GET(req: Request) {
   const refresh = json.refresh_token;
 
   return new NextResponse(
-    `
-      <html><body style="font-family:ui-sans-serif;max-width:720px;margin:40px auto;line-height:1.5">
-        <h2>Copy your Spotify refresh token</h2>
-        <p>Paste this into <code>.env.local</code> as <code>SPOTIFY_REFRESH_TOKEN</code>:</p>
-        <pre style="white-space:pre-wrap;border:1px solid #ddd;padding:12px;border-radius:8px;background:#f9fafb">${refresh ?? "(none received)"}</pre>
-        <p>Then restart: <code>npm run dev</code>.</p>
-      </body></html>
-    `,
+    `<html><body style="font-family:ui-sans-serif;max-width:720px;margin:40px auto;line-height:1.5">
+       <h2>Copy your Spotify refresh token</h2>
+       <p>Paste this into <code>.env.local</code> or Vercel env as <code>SPOTIFY_REFRESH_TOKEN</code>:</p>
+       <pre style="white-space:pre-wrap;border:1px solid #ddd;padding:12px;border-radius:8px;background:#f9fafb">${refresh ?? "(none received)"}</pre>
+       <p>Then redeploy.</p>
+     </body></html>`,
     { headers: { "Content-Type": "text/html" } }
   );
 }
-
