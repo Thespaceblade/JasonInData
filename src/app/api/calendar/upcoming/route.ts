@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import * as ical from "node-ical";
 
+// Always run on demand; do not prerender
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 function toHttps(url: string) {
   return url.startsWith("webcal://") ? "https://" + url.slice("webcal://".length) : url;
 }
@@ -28,7 +32,14 @@ export async function GET() {
     }
     const icsUrl = toHttps(raw);
 
-    const res = await fetch(icsUrl, { cache: "no-store" });
+    const res = await fetch(icsUrl, {
+      cache: "no-store",
+      headers: {
+        // Some calendar hosts are picky without a UA
+        "User-Agent": "Mozilla/5.0 (compatible; JasonInDataBot/1.0)",
+        Accept: "text/calendar, text/plain;q=0.9,*/*;q=0.8",
+      },
+    });
     if (!res.ok) {
       return NextResponse.json(
         { events: [], error: await res.text() },
@@ -38,8 +49,8 @@ export async function GET() {
     const text = await res.text();
 
     // Parse ICS (support node-ical variants)
-    const parser: any = (ical as any);
-    const data = parser?.sync?.parseICS ? parser.sync.parseICS(text) : parser.parseICS(text);
+    const parser: any = ical as any;
+    const data = parser?.parseICS ? parser.parseICS(text) : parser?.sync?.parseICS(text);
 
     const now = new Date();
     const startOfDay = new Date(now);
@@ -119,4 +130,3 @@ export async function GET() {
     );
   }
 }
-
