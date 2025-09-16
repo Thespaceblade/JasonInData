@@ -21,7 +21,7 @@ function inWindow(s: Date, e: Date, winStart: Date, winEnd: Date) {
   return e >= winStart && s <= winEnd;
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const raw = process.env.APPLE_ICS_URL || "";
     if (!raw) {
@@ -52,11 +52,46 @@ export async function GET() {
     const parser: any = ical as any;
     const data = parser?.parseICS ? parser.parseICS(text) : parser?.sync?.parseICS(text);
 
+    // Compute "today" window in a specific timezone (default to America/New_York)
+    // This avoids server timezone drift (e.g., UTC) causing wrong-day filtering.
+    const url = new URL(req.url);
+    const qp = url.searchParams;
+    const tz = (qp.get("tz") || process.env.CAL_TZ || "America/New_York").trim();
+
+    function getTzParts(date: Date) {
+      const dtf = new Intl.DateTimeFormat("en-US", {
+        timeZone: tz,
+        hour12: false,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+      const parts = Object.fromEntries(dtf.formatToParts(date).map((p) => [p.type, p.value]));
+      return {
+        year: Number(parts.year),
+        month: Number(parts.month),
+        day: Number(parts.day),
+        hour: Number(parts.hour),
+        minute: Number(parts.minute),
+        second: Number(parts.second),
+      };
+    }
+
+    // Derive midnight in tz by subtracting the tz wall-clock hh:mm:ss
     const now = new Date();
-    const startOfDay = new Date(now);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(now);
-    endOfDay.setHours(23, 59, 59, 999);
+    const np = getTzParts(now);
+    const defaultStart = new Date(
+      now.getTime() - (((np.hour * 60 + np.minute) * 60 + np.second) * 1000 + now.getMilliseconds())
+    );
+    const defaultEnd = new Date(defaultStart.getTime() + 24 * 60 * 60 * 1000 - 1);
+
+    const timeMin = qp.get("timeMin") || qp.get("from");
+    const timeMax = qp.get("timeMax") || qp.get("to");
+    const winStart = timeMin ? new Date(timeMin) : defaultStart;
+    const winEnd = timeMax ? new Date(timeMax) : defaultEnd;
 
     const events: CalEvent[] = [];
 
@@ -66,12 +101,12 @@ export async function GET() {
 
       // Helper to push one instance (clamped to today)
       const pushInstance = (s: Date, e: Date, title: string) => {
-        if (!inWindow(s, e, startOfDay, endOfDay)) return;
+        if (!inWindow(s, e, winStart, winEnd)) return;
         const allDay =
           (s.getHours() === 0 && s.getMinutes() === 0 && e.getHours() === 0 && e.getMinutes() === 0) ||
           v.datetype === "date";
-        const clampedStart = new Date(Math.max(s.getTime(), startOfDay.getTime()));
-        const clampedEnd = new Date(Math.min(e.getTime(), endOfDay.getTime()));
+        const clampedStart = new Date(Math.max(s.getTime(), winStart.getTime()));
+        const clampedEnd = new Date(Math.min(e.getTime(), winEnd.getTime()));
         events.push({
           id: (v.uid || key) + "_" + clampedStart.toISOString(),
           title: title || "Event",
@@ -95,7 +130,9 @@ export async function GET() {
             exdates[d] = true;
           }
         }
-        const between = v.rrule.between(startOfDay, endOfDay, true);
+        // Expand a little before the window to capture ongoing events crossing the boundary
+        const padStart = new Date(winStart.getTime() - durationMs);
+        const between = v.rrule.between(padStart, winEnd, true);
         for (const dt of between) {
           const start = new Date(dt);
           const end = new Date(start.getTime() + durationMs);

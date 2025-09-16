@@ -11,6 +11,15 @@ type TrackState = {
   albumImageUrl: string | null;
 };
 
+// Robust timestamp parser: treat naive strings as local time (Safari-safe)
+function parseCalDate(s: string): Date {
+  if (typeof s === "string" && !/[zZ]|[+-]\d{2}:\d{2}$/.test(s)) {
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})(?::(\d{2}))?/);
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || "0"));
+  }
+  return new Date(s);
+}
+
 function MarqueeTitle({ text }: { text: string }) {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const textRef = React.useRef<HTMLDivElement | null>(null);
@@ -66,18 +75,84 @@ export default function StatusGrid() {
   // Calendar state for bottom timeline
   type CalEvent = { id: string; title: string; start: string; end: string; allDay: boolean };
   const [cal, setCal] = React.useState<CalEvent[] | null>(null);
+
+  async function fetchTodayEvents(): Promise<CalEvent[]> {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    const tryFetch = async (url: string) => {
+      const r = await fetch(url, { cache: "no-store" });
+      if (!r.ok) throw new Error(String(r.status));
+      return r.json();
+    };
+
+    let j: any;
+    try {
+      j = await tryFetch(
+        `/api/calendar/range?from=${encodeURIComponent(startOfDay.toISOString())}` +
+          `&to=${encodeURIComponent(endOfDay.toISOString())}` +
+          `&tz=${encodeURIComponent(tz)}&includeOngoing=1`
+      );
+    } catch {
+      j = await tryFetch(
+        `/api/calendar/upcoming?timeMin=${encodeURIComponent(startOfDay.toISOString())}` +
+          `&timeMax=${encodeURIComponent(endOfDay.toISOString())}` +
+          `&tz=${encodeURIComponent(tz)}&includeOngoing=1`
+      );
+    }
+
+    return (j.events || [])
+      .filter((e: any) => +parseCalDate(e.end) > +startOfDay && +parseCalDate(e.start) < +endOfDay)
+      .sort((a: any, b: any) => +parseCalDate(a.start) - +parseCalDate(b.start));
+  }
   React.useEffect(() => {
     let active = true;
     (async () => {
       try {
-        const r = await fetch("/api/calendar/upcoming", { cache: "no-store" });
-        const j = await r.json();
-        if (active) setCal(j.events || []);
+        const todays = await fetchTodayEvents();
+        if (active) {
+          setCal(todays);
+          if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
+            try {
+              const rows = todays.map((e: any) => ({
+                title: e.title,
+                start: e.start,
+                end: e.end,
+                allDay: e.allDay,
+                minutes: Math.round((+parseCalDate(e.end) - +parseCalDate(e.start)) / 60000),
+              }));
+              console.groupCollapsed("Calendar events (today)");
+              console.table(rows);
+              console.groupEnd();
+            } catch {}
+          }
+        }
       } catch {
         if (active) setCal([]);
       }
     })();
     return () => { active = false; };
+  }, []);
+
+  // Periodically refresh calendar so the day view stays current (e.g., at midnight)
+  React.useEffect(() => {
+    let active = true;
+    const refresh = async () => {
+      try {
+        const todays = await fetchTodayEvents();
+        if (active) setCal(todays);
+      } catch {
+        // Ignore transient errors
+      }
+    };
+    // Refresh every 5 minutes; also handles crossing midnight without a page reload
+    const id = setInterval(refresh, 5 * 60 * 1000);
+    return () => {
+      active = false;
+      clearInterval(id);
+    };
   }, []);
 
   // You can keep your other cards as they are; here’s a simple 2x2 + wide layout:
@@ -158,16 +233,17 @@ export default function StatusGrid() {
 
 // Helpers and timeline component
 type CalEvent = { id: string; title: string; start: string; end: string; allDay: boolean };
-function minutesSinceDayStart(d: Date, dayStartHour: number) {
-  return (d.getHours() - dayStartHour) * 60 + d.getMinutes();
-}
 function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v));
 }
 function TodayTimeline({ events }: { events: CalEvent[] }) {
-  const dayStart = 0; // 12am
-  const dayEnd = 24; // 12am next day
-  const totalMin = (dayEnd - dayStart) * 60;
+  const dayStart = 0; // for tick labels only
+  const dayEnd = 24;
+  // Local start/end of day for positioning
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+  const totalMin = (endOfDay.getTime() - startOfDay.getTime()) / 60000;
   const [, forceTick] = React.useState(0);
 
   // Update "now" position once a minute
@@ -176,9 +252,21 @@ function TodayTimeline({ events }: { events: CalEvent[] }) {
     return () => clearInterval(id);
   }, []);
 
-  const now = new Date();
-  const nowMin = clamp(minutesSinceDayStart(now, dayStart), 0, totalMin);
+  const nowMin = clamp((Date.now() - startOfDay.getTime()) / 60000, 0, totalMin);
   const nowLeft = (nowMin / totalMin) * 100;
+
+  const MIN_EVENT_MINUTES = 15;
+  const visibleEvents = React.useMemo(() => {
+    return events.filter((ev) => {
+      const s = parseCalDate(ev.start).getTime();
+      const e = parseCalDate(ev.end).getTime();
+      const cs = Math.max(s, startOfDay.getTime());
+      const ce = Math.min(e, endOfDay.getTime());
+      if (ev.allDay) return true;
+      const dur = (ce - cs) / 60000;
+      return dur >= MIN_EVENT_MINUTES;
+    });
+  }, [events, startOfDay.getTime(), endOfDay.getTime()]);
   return (
     <div className="flex h-full flex-col space-y-3 sm:space-y-4">
       {/* Title sized like other cards */}
@@ -191,29 +279,35 @@ function TodayTimeline({ events }: { events: CalEvent[] }) {
           <div className="absolute inset-0 rounded-xl border border-dark/20" />
           {Array.from({ length: dayEnd - dayStart + 1 }).map((_, i) => {
           const left = (i / (dayEnd - dayStart)) * 100;
-          const label = dayStart + i;
-          const label12 = (label % 12) || 12; // 12-hour tick labels
+          const label = dayStart + i; // 0..24 labels
+          const isFirst = i === 0;
+          const isLast = i === (dayEnd - dayStart);
+          const leftStyle = isLast ? "calc(100% - 1px)" : `${left}%`;
           return (
-            <div key={i} className="absolute top-0 -translate-x-1/2 h-full" style={{ left: `${left}%` }}>
+            <div key={i} className="absolute top-0 h-full" style={{ left: leftStyle }}>
               <div className="h-full border-l border-dashed border-dark/30" />
-              <div className="absolute -top-4 -translate-x-1/2 text-[10px] text-dark/60 group-hover:text-white/70">{label12}</div>
+              <div className={`absolute top-1 text-[10px] text-dark/60 group-hover:text-white/70 ${isFirst ? "" : isLast ? "-translate-x-full" : "-translate-x-1/2"}`}>{label}</div>
             </div>
           );
           })}
-          {/* Now marker (local time) */}
+          {/* Now marker (local time) - spans entire day area and stays above events */}
           <div
-            className="absolute top-0 -translate-x-1/2 h-full w-px bg-red-500"
+            className="absolute inset-y-0 -translate-x-1/2 w-px bg-red-500 z-20"
             style={{ left: `${nowLeft}%` }}
             aria-hidden
           />
-          {events.map((ev) => {
-          const s = new Date(ev.start);
-          const e = new Date(ev.end);
-          const startMin = clamp(minutesSinceDayStart(s, dayStart), 0, totalMin);
-          const endMin = clamp(minutesSinceDayStart(e, dayStart), 0, totalMin);
-          const widthPct = Math.max(2, ((endMin - startMin) / totalMin) * 100);
+          {visibleEvents.map((ev) => {
+          const s = parseCalDate(ev.start).getTime();
+          const e = parseCalDate(ev.end).getTime();
+          const cs = Math.max(s, startOfDay.getTime());
+          const ce = Math.min(e, endOfDay.getTime());
+          const startMin = clamp((cs - startOfDay.getTime()) / 60000, 0, totalMin);
+          const endMin = clamp((ce - startOfDay.getTime()) / 60000, 0, totalMin);
+          const eventDurationMin = Math.max(0, endMin - startMin);
+          const widthPct = Math.max(2, (eventDurationMin / totalMin) * 100);
           const leftPct = (startMin / totalMin) * 100;
           const label = ev.allDay ? `${ev.title} (All-day)` : ev.title;
+          const showText = widthPct >= 6; // avoid single-letter truncation on tiny events
           return (
             <div
               key={ev.id}
@@ -221,9 +315,11 @@ function TodayTimeline({ events }: { events: CalEvent[] }) {
               style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
               title={label}
             >
-              <div className="absolute inset-0 flex items-center px-2">
-                <span className="truncate text-[11px] font-medium text-dark/80 group-hover:text-white/80">{label}</span>
-              </div>
+              {showText && (
+                <div className="absolute inset-0 flex items-center px-2">
+                  <span className="truncate text-[11px] font-medium text-dark/80 group-hover:text-white/80">{label}</span>
+                </div>
+              )}
               <div className="pointer-events-none absolute inset-0 rounded-md ring-0 transition group-hover:ring-2 group-hover:ring-white/40" />
             </div>
           );
