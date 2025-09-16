@@ -4,7 +4,7 @@ import * as React from "react";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import StatusGrid from "@/components/StatusGrid";
-import { ChevronDown, Github, Linkedin, Mail, Twitter, CalendarDays } from "lucide-react";
+import { ChevronDown, Github, Linkedin, Mail, Instagram, CalendarDays } from "lucide-react";
 
 export default function HeroSection() {
   const reduce = useReducedMotion();
@@ -19,7 +19,7 @@ export default function HeroSection() {
 
   // Desktop: five icons around a circle, evenly spaced
   const desktopAngles = [-90, -18, 54, 126, 198];
-  const desktopRadius = 120;
+  const desktopRadius = 150;
   const desktopPositions = desktopAngles.map((ang) => polar(desktopRadius, ang));
 
   // Mobile: compact vertical fan
@@ -35,13 +35,13 @@ export default function HeroSection() {
     { href: "https://www.linkedin.com/in/jasoncharwin05", label: "LinkedIn", icon: <Linkedin className="h-full w-full" /> },
     { href: "https://github.com/Thespaceblade", label: "GitHub", icon: <Github className="h-full w-full" /> },
     { href: "mailto:jason.charwin360@gmail.com", label: "Email", icon: <Mail className="h-full w-full" /> },
-    { href: "#", label: "Twitter", icon: <Twitter className="h-full w-full" /> },
+    { href: "https://www.instagram.com/jasoncharwin/", label: "Instagram", icon: <Instagram className="h-full w-full" /> },
     { href: "#", label: "Calendar", icon: <CalendarDays className="h-full w-full" /> },
   ];
 
   // 2x larger bubbles, icons centered
   const iconBaseClasses =
-    "flex h-28 w-28 md:h-32 md:w-32 items-center justify-center rounded-full border border-border bg-surface text-dark shadow-sm transition-colors hover:bg-[color-mix(in_srgb,var(--surface)_90%,var(--primary)_10%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg";
+    "flex h-32 w-32 md:h-36 md:w-36 items-center justify-center rounded-full border-4 border-white bg-surface text-dark shadow-sm transition-colors hover:bg-[color-mix(in_srgb,var(--surface)_90%,var(--primary)_10%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg";
 
   // Rotating profile images (place in /public)
   const profileImages = React.useMemo(
@@ -69,7 +69,7 @@ export default function HeroSection() {
             <div className="w-full max-w-xl text-center">
               {/* Profile + Orbit (centered) */}
               <div
-                className="relative mx-auto grid h-96 w-96 place-items-center sm:h-[28rem] sm:w-[28rem]"
+                className="relative mx-auto grid h-[26rem] w-[26rem] place-items-center sm:h-[30rem] sm:w-[30rem]"
                 onPointerEnter={() => setHovered(true)}
                 onPointerLeave={() => setHovered(false)}
               >
@@ -79,7 +79,7 @@ export default function HeroSection() {
                   initial={{ rotateY: 0 }}
                   animate={hovered ? { rotateY: 180 } : { rotateY: 0 }}
                   transition={{ duration: 0.6, ease: "easeInOut" }}
-                  className="relative h-72 w-72 overflow-hidden rounded-full border-4 border-white shadow-lg sm:h-80 sm:w-80"
+                  className="relative h-80 w-80 overflow-hidden rounded-full border-4 border-white shadow-lg sm:h-96 sm:w-96"
                 >
                   <AnimatePresence mode="wait">
                     <motion.img
@@ -136,7 +136,7 @@ export default function HeroSection() {
                             aria-label={l.label}
                             className={`${iconBaseClasses} pointer-events-auto -translate-x-1/2 -translate-y-1/2`}
                           >
-                            <span aria-hidden className="flex items-center justify-center h-12 w-12 md:h-14 md:w-14">{l.icon}</span>
+                            <span aria-hidden className="flex items-center justify-center h-14 w-14 md:h-16 md:w-16">{l.icon}</span>
                             <span className="sr-only">{l.label}</span>
                           </a>
                         </motion.div>
@@ -167,7 +167,7 @@ export default function HeroSection() {
                             aria-label={l.label}
                             className={`${iconBaseClasses} pointer-events-auto -translate-x-1/2 -translate-y-1/2`}
                           >
-                            <span aria-hidden className="flex items-center justify-center h-12 w-12">{l.icon}</span>
+                            <span aria-hidden className="flex items-center justify-center h-14 w-14">{l.icon}</span>
                             <span className="sr-only">{l.label}</span>
                           </a>
                         </motion.div>
@@ -178,7 +178,7 @@ export default function HeroSection() {
               </div>
 
               <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4 text-center md:text-left">
-                <h1 id="hero-title" className="font-display text-6xl sm:text-7xl font-bold tracking-tight">
+                <h1 id="hero-title" className="font-display text-7xl sm:text-8xl font-bold tracking-tight">
                   Hi, I’m Jason!
                 </h1>
                 <p className="text-lg sm:text-xl text-white/80 max-w-xl leading-relaxed mx-auto md:mx-0">

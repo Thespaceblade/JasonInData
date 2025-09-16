@@ -2,6 +2,7 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { StatusCard, Pill } from "@/components/status/StatusCard";
+import { cn } from "@/lib/utils";
 
 type TrackState = {
   isPlaying: boolean;
@@ -55,6 +56,20 @@ function MarqueeTitle({ text }: { text: string }) {
       >
         {text}
       </motion.div>
+    </div>
+  );
+}
+
+function SectionTitle({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div
+      className={cn(
+        "text-base sm:text-lg font-semibold leading-snug text-dark",
+        "transition-colors duration-300 ease-out group-hover:text-white",
+        className
+      )}
+    >
+      {children}
     </div>
   );
 }
@@ -170,7 +185,7 @@ export default function StatusGrid() {
         <StatusCard tone="grey" className="h-full">
           {track?.title ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
-              <div className="mb-3 opacity-80">was listening to</div>
+              <SectionTitle className="mb-3">was listening to</SectionTitle>
               <a
                 href={track.url ?? "#"}
                 target="_blank"
@@ -198,7 +213,7 @@ export default function StatusGrid() {
           ) : (
             <div className="flex h-full items-center justify-center text-center">
               <div>
-                was listening to
+                <SectionTitle>was listening to</SectionTitle>
                 <div className="mt-2">
                   <Pill>…</Pill>
                 </div>
@@ -256,74 +271,147 @@ function TodayTimeline({ events }: { events: CalEvent[] }) {
   const nowLeft = (nowMin / totalMin) * 100;
 
   const MIN_EVENT_MINUTES = 15;
-  const visibleEvents = React.useMemo(() => {
-    return events.filter((ev) => {
-      const s = parseCalDate(ev.start).getTime();
-      const e = parseCalDate(ev.end).getTime();
-      const cs = Math.max(s, startOfDay.getTime());
-      const ce = Math.min(e, endOfDay.getTime());
-      if (ev.allDay) return true;
-      const dur = (ce - cs) / 60000;
-      return dur >= MIN_EVENT_MINUTES;
-    });
-  }, [events, startOfDay.getTime(), endOfDay.getTime()]);
+  const layoutEvents = React.useMemo(() => {
+    type Layout = {
+      id: string;
+      label: string;
+      leftPct: number;
+      widthPct: number;
+      showText: boolean;
+      allDay: boolean;
+      lane: number;
+      laneCount: number;
+      groupId: number;
+      startMin: number;
+      endMin: number;
+      eventDurationMin: number;
+    };
+
+    const prepared: Layout[] = events
+      .map((ev) => {
+        const s = parseCalDate(ev.start).getTime();
+        const e = parseCalDate(ev.end).getTime();
+        const cs = Math.max(s, startOfDay.getTime());
+        const ce = Math.min(e, endOfDay.getTime());
+        const startMin = clamp((cs - startOfDay.getTime()) / 60000, 0, totalMin);
+        const endMin = clamp((ce - startOfDay.getTime()) / 60000, 0, totalMin);
+        const eventDurationMin = Math.max(0, endMin - startMin);
+        const widthPct = Math.max(2, (eventDurationMin / totalMin) * 100);
+        const leftPct = (startMin / totalMin) * 100;
+        const allDay = ev.allDay;
+        const label = allDay ? `${ev.title} (All-day)` : ev.title;
+        const showText = widthPct >= 6;
+        return {
+          id: ev.id,
+          label,
+          leftPct,
+          widthPct,
+          showText,
+          allDay,
+          lane: 0,
+          laneCount: 1,
+          groupId: -1,
+          startMin,
+          endMin,
+          eventDurationMin,
+        } as Layout;
+      })
+      .filter((item) => {
+        if (item.allDay) return true;
+        return item.eventDurationMin >= MIN_EVENT_MINUTES;
+      })
+      .sort((a, b) => {
+        if (a.startMin !== b.startMin) return a.startMin - b.startMin;
+        return a.endMin - b.endMin;
+      });
+
+    const active: { lane: number; endMin: number }[] = [];
+    let currentGroupId = -1;
+    const groupLaneCounts = new Map<number, number>();
+
+    for (const item of prepared) {
+      for (let i = active.length - 1; i >= 0; i--) {
+        if (active[i].endMin <= item.startMin) {
+          active.splice(i, 1);
+        }
+      }
+
+      if (active.length === 0) {
+        currentGroupId += 1;
+      }
+
+      const used = new Set(active.map((a) => a.lane));
+      let lane = 0;
+      while (used.has(lane)) lane += 1;
+
+      item.lane = lane;
+      item.groupId = currentGroupId;
+      active.push({ lane, endMin: item.endMin });
+
+      const prev = groupLaneCounts.get(currentGroupId) || 0;
+      if (lane + 1 > prev) groupLaneCounts.set(currentGroupId, lane + 1);
+    }
+
+    return prepared.map((item) => ({
+      ...item,
+      laneCount: groupLaneCounts.get(item.groupId) || 1,
+    }));
+  }, [events, startOfDay.getTime(), endOfDay.getTime(), totalMin]);
   return (
     <div className="flex h-full flex-col space-y-3 sm:space-y-4">
       {/* Title sized like other cards */}
-      <div className="text-center text-lg sm:text-xl font-semibold text-dark/80 group-hover:text-white/80">
-        Jason's schedule today
-      </div>
-      <div className="relative h-full w-full rounded-xl bg-white/70 overflow-x-auto">
-        {/* Inner scroll surface to avoid heading overlap */}
-        <div className="relative h-full min-w-[1000px]">
-          <div className="absolute inset-0 rounded-xl border border-dark/20" />
-          {Array.from({ length: dayEnd - dayStart + 1 }).map((_, i) => {
-          const left = (i / (dayEnd - dayStart)) * 100;
-          const label = dayStart + i; // 0..24 labels
-          const isFirst = i === 0;
-          const isLast = i === (dayEnd - dayStart);
-          const leftStyle = isLast ? "calc(100% - 1px)" : `${left}%`;
-          return (
-            <div key={i} className="absolute top-0 h-full" style={{ left: leftStyle }}>
-              <div className="h-full border-l border-dashed border-dark/30" />
-              <div className={`absolute top-1 text-[10px] text-dark/60 group-hover:text-white/70 ${isFirst ? "" : isLast ? "-translate-x-full" : "-translate-x-1/2"}`}>{label}</div>
-            </div>
-          );
-          })}
-          {/* Now marker (local time) - spans entire day area and stays above events */}
-          <div
-            className="absolute inset-y-0 -translate-x-1/2 w-px bg-red-500 z-20"
-            style={{ left: `${nowLeft}%` }}
-            aria-hidden
-          />
-          {visibleEvents.map((ev) => {
-          const s = parseCalDate(ev.start).getTime();
-          const e = parseCalDate(ev.end).getTime();
-          const cs = Math.max(s, startOfDay.getTime());
-          const ce = Math.min(e, endOfDay.getTime());
-          const startMin = clamp((cs - startOfDay.getTime()) / 60000, 0, totalMin);
-          const endMin = clamp((ce - startOfDay.getTime()) / 60000, 0, totalMin);
-          const eventDurationMin = Math.max(0, endMin - startMin);
-          const widthPct = Math.max(2, (eventDurationMin / totalMin) * 100);
-          const leftPct = (startMin / totalMin) * 100;
-          const label = ev.allDay ? `${ev.title} (All-day)` : ev.title;
-          const showText = widthPct >= 6; // avoid single-letter truncation on tiny events
-          return (
-            <div
-              key={ev.id}
-              className="group absolute top-6 h-7 overflow-hidden rounded-md border border-dark/20 bg-[#4B9CD3]/15 backdrop-blur-sm"
-              style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
-              title={label}
-            >
-              {showText && (
-                <div className="absolute inset-0 flex items-center px-2">
-                  <span className="truncate text-[11px] font-medium text-dark/80 group-hover:text-white/80">{label}</span>
-                </div>
-              )}
-              <div className="pointer-events-none absolute inset-0 rounded-md ring-0 transition group-hover:ring-2 group-hover:ring-white/40" />
-            </div>
-          );
-          })}
+      <SectionTitle className="text-center">Jason's schedule today</SectionTitle>
+      <div className="relative h-full w-full rounded-xl bg-white/70 overflow-hidden">
+        <div className="absolute inset-0 rounded-xl border border-dark/20" />
+        {Array.from({ length: dayEnd - dayStart + 1 }).map((_, i) => {
+        const left = (i / (dayEnd - dayStart)) * 100;
+        const label = dayStart + i; // 0..24 labels
+        const isFirst = i === 0;
+        const isLast = i === (dayEnd - dayStart);
+        const leftStyle = isLast ? "calc(100% - 1px)" : `${left}%`;
+        return (
+          <div key={i} className="absolute top-0 h-full" style={{ left: leftStyle }}>
+            <div className="h-full border-l border-dashed border-dark/30" />
+            <div className={`absolute top-1 text-[10px] text-dark/60 group-hover:text-white/70 ${isFirst ? "" : isLast ? "-translate-x-full" : "-translate-x-1/2"}`}>{label}</div>
+          </div>
+        );
+        })}
+        {/* Now marker (local time) - spans entire day area and stays above events */}
+        <div
+          className="absolute inset-y-0 -translate-x-1/2 w-px bg-red-500 z-30"
+          style={{ left: `${nowLeft}%` }}
+          aria-hidden
+        />
+        <div className="absolute inset-0 pt-10 pb-5">
+          <div className="relative h-full">
+            {layoutEvents.map((item) => {
+            const { leftPct, widthPct, label, showText, id, lane, laneCount } = item;
+            const gapPct = laneCount > 1 ? 2 : 0;
+            const totalGap = gapPct * (laneCount - 1);
+            const heightPercent = laneCount ? Math.max(0, (100 - totalGap) / laneCount) : 100;
+            const topPercent = lane * (heightPercent + gapPct);
+            return (
+              <div
+                key={id}
+                className="group absolute z-20 overflow-hidden rounded-md border border-dark/20 bg-[#4B9CD3]/15 backdrop-blur-sm"
+                style={{
+                  left: `${leftPct}%`,
+                  width: `${widthPct}%`,
+                  top: `${topPercent}%`,
+                  height: `${heightPercent}%`,
+                }}
+                title={label}
+              >
+                {showText && (
+                  <div className="absolute inset-0 flex items-center px-2">
+                    <span className="truncate text-[11px] font-medium text-dark/80 group-hover:text-white/80">{label}</span>
+                  </div>
+                )}
+                <div className="pointer-events-none absolute inset-0 rounded-md ring-0 transition group-hover:ring-2 group-hover:ring-white/40" />
+              </div>
+            );
+            })}
+          </div>
         </div>
       </div>
     </div>

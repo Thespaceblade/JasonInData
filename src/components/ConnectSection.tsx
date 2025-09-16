@@ -1,7 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import IconTile from "@/components/IconTile";
-import { Github, Linkedin, Mail, Twitter, CalendarDays } from "lucide-react";
+import { Github, Linkedin, Mail, Instagram, CalendarDays } from "lucide-react";
 
 const container = {
   hidden: { opacity: 0 },
@@ -54,7 +54,12 @@ export function ConnectSection() {
             />
           </motion.div>
           <motion.div variants={item}>
-            <IconTile href="#" icon={<Twitter className="h-6 w-6" />} label="Twitter" />
+            <IconTile
+              href="https://www.instagram.com/jasoncharwin/"
+              icon={<Instagram className="h-6 w-6" />}
+              label="Instagram"
+              external
+            />
           </motion.div>
           <motion.div variants={item}>
             <IconTile href="#" icon={<CalendarDays className="h-6 w-6" />} label="Calendar" />
