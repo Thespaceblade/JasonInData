@@ -23,7 +23,10 @@ function inWindow(s: Date, e: Date, winStart: Date, winEnd: Date) {
 
 export async function GET(req: Request) {
   try {
-    const raw = process.env.APPLE_ICS_URL || "";
+    const requestUrl = new URL(req.url);
+    const qp = requestUrl.searchParams;
+    const requestedSource = (qp.get("ics") || qp.get("url") || "").trim();
+    const raw = requestedSource || process.env.APPLE_ICS_URL || "";
     if (!raw) {
       return NextResponse.json(
         { events: [], reason: "No APPLE_ICS_URL set" },
@@ -54,8 +57,6 @@ export async function GET(req: Request) {
 
     // Compute "today" window in a specific timezone (default to America/New_York)
     // This avoids server timezone drift (e.g., UTC) causing wrong-day filtering.
-    const url = new URL(req.url);
-    const qp = url.searchParams;
     const tz = (qp.get("tz") || process.env.CAL_TZ || "America/New_York").trim();
 
     function getTzParts(date: Date) {

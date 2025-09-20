@@ -12,6 +12,16 @@ type TrackState = {
   albumImageUrl: string | null;
 };
 
+type CalEvent = { id: string; title: string; start: string; end: string; allDay: boolean };
+
+type TimelineEvent = CalEvent & {
+  calendarType: "academics" | "life";
+  displayLabel: string;
+};
+
+const LIFE_CAL_URL =
+  "webcal://p143-caldav.icloud.com/published/2/MTAyOTMxNzE0MzMxMDI5MyEyiNoEaAs4uKPpLhbmYhcY4h5I3xmX_gnqAs8lv0bHQ0lr4IEP6hwjvXG5a-B4D07mLA2PrM3JfviYu-6-WPQ";
+
 // Robust timestamp parser: treat naive strings as local time (Safari-safe)
 function parseCalDate(s: string): Date {
   if (typeof s === "string" && !/[zZ]|[+-]\d{2}:\d{2}$/.test(s)) {
@@ -88,10 +98,11 @@ export default function StatusGrid() {
   }, []);
 
   // Calendar state for bottom timeline
-  type CalEvent = { id: string; title: string; start: string; end: string; allDay: boolean };
   const [cal, setCal] = React.useState<CalEvent[] | null>(null);
+  const [lifeCal, setLifeCal] = React.useState<CalEvent[] | null>(null);
 
-  async function fetchTodayEvents(): Promise<CalEvent[]> {
+  async function fetchTodayEvents(opts?: { icsUrl?: string }): Promise<CalEvent[]> {
+    const icsUrl = opts?.icsUrl;
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
@@ -103,24 +114,43 @@ export default function StatusGrid() {
       return r.json();
     };
 
+    const icsParam = icsUrl ? `&ics=${encodeURIComponent(icsUrl)}` : "";
+
     let j: any;
     try {
       j = await tryFetch(
         `/api/calendar/range?from=${encodeURIComponent(startOfDay.toISOString())}` +
           `&to=${encodeURIComponent(endOfDay.toISOString())}` +
-          `&tz=${encodeURIComponent(tz)}&includeOngoing=1`
+          `&tz=${encodeURIComponent(tz)}&includeOngoing=1${icsParam}`
       );
     } catch {
       j = await tryFetch(
         `/api/calendar/upcoming?timeMin=${encodeURIComponent(startOfDay.toISOString())}` +
           `&timeMax=${encodeURIComponent(endOfDay.toISOString())}` +
-          `&tz=${encodeURIComponent(tz)}&includeOngoing=1`
+          `&tz=${encodeURIComponent(tz)}&includeOngoing=1${icsParam}`
       );
     }
 
     return (j.events || [])
       .filter((e: any) => +parseCalDate(e.end) > +startOfDay && +parseCalDate(e.start) < +endOfDay)
       .sort((a: any, b: any) => +parseCalDate(a.start) - +parseCalDate(b.start));
+  }
+
+  function debugLogCalendar(label: string, events: CalEvent[]) {
+    if (typeof window === "undefined" || process.env.NODE_ENV === "production") return;
+    try {
+      const rows = events.map((e: CalEvent) => ({
+        source: label,
+        title: e.title,
+        start: e.start,
+        end: e.end,
+        allDay: e.allDay,
+        minutes: Math.round((+parseCalDate(e.end) - +parseCalDate(e.start)) / 60000),
+      }));
+      console.groupCollapsed(`${label} events (today)`);
+      console.table(rows);
+      console.groupEnd();
+    } catch {}
   }
   React.useEffect(() => {
     let active = true;
@@ -129,23 +159,26 @@ export default function StatusGrid() {
         const todays = await fetchTodayEvents();
         if (active) {
           setCal(todays);
-          if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
-            try {
-              const rows = todays.map((e: any) => ({
-                title: e.title,
-                start: e.start,
-                end: e.end,
-                allDay: e.allDay,
-                minutes: Math.round((+parseCalDate(e.end) - +parseCalDate(e.start)) / 60000),
-              }));
-              console.groupCollapsed("Calendar events (today)");
-              console.table(rows);
-              console.groupEnd();
-            } catch {}
-          }
+          debugLogCalendar("Academics", todays);
         }
       } catch {
         if (active) setCal([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
+  React.useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const todays = await fetchTodayEvents({ icsUrl: LIFE_CAL_URL });
+        if (active) {
+          setLifeCal(todays);
+          debugLogCalendar("Life", todays);
+        }
+      } catch {
+        if (active) setLifeCal([]);
       }
     })();
     return () => { active = false; };
@@ -161,6 +194,12 @@ export default function StatusGrid() {
       } catch {
         // Ignore transient errors
       }
+      try {
+        const lifeEvents = await fetchTodayEvents({ icsUrl: LIFE_CAL_URL });
+        if (active) setLifeCal(lifeEvents);
+      } catch {
+        // Ignore transient errors for Life feed as well
+      }
     };
     // Refresh every 5 minutes; also handles crossing midnight without a page reload
     const id = setInterval(refresh, 5 * 60 * 1000);
@@ -171,6 +210,24 @@ export default function StatusGrid() {
   }, []);
 
   // You can keep your other cards as they are; here’s a simple 2x2 + wide layout:
+  const timelineEvents = React.useMemo(() => {
+    const aggregated: TimelineEvent[] = [];
+    if (cal) {
+      aggregated.push(
+        ...cal.map((ev) => ({ ...ev, calendarType: "academics" as const, displayLabel: "Academics" }))
+      );
+    }
+    if (lifeCal) {
+      aggregated.push(
+        ...lifeCal.map((ev) => ({ ...ev, calendarType: "life" as const, displayLabel: "Life" }))
+      );
+    }
+    return aggregated;
+  }, [cal, lifeCal]);
+
+  const timelineLoading = cal === null || lifeCal === null;
+  const hasTimelineEvents = timelineEvents.length > 0;
+
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
       {/* Top-left: square */}
@@ -230,14 +287,12 @@ export default function StatusGrid() {
             <span className="absolute inset-y-0 left-0 w-0 bg-[#0a1a2f] transition-all duration-300 ease-out group-hover:w-full" />
           </div>
           <div className="relative z-10 h-full">
-            {cal ? (
-              cal.length ? (
-                <TodayTimeline events={cal} />
-              ) : (
-                <div className="grid h-full place-items-center text-sm text-dark/70">No events today</div>
-              )
-            ) : (
+            {timelineLoading ? (
               <div className="grid h-full place-items-center text-sm text-dark/70">Loading…</div>
+            ) : hasTimelineEvents ? (
+              <TodayTimeline events={timelineEvents} />
+            ) : (
+              <div className="grid h-full place-items-center text-sm text-dark/70">No events today</div>
             )}
           </div>
         </div>
@@ -247,11 +302,10 @@ export default function StatusGrid() {
 }
 
 // Helpers and timeline component
-type CalEvent = { id: string; title: string; start: string; end: string; allDay: boolean };
 function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v));
 }
-function TodayTimeline({ events }: { events: CalEvent[] }) {
+function TodayTimeline({ events }: { events: TimelineEvent[] }) {
   const dayStart = 0; // for tick labels only
   const dayEnd = 24;
   // Local start/end of day for positioning
@@ -271,14 +325,20 @@ function TodayTimeline({ events }: { events: CalEvent[] }) {
   const nowLeft = (nowMin / totalMin) * 100;
 
   const MIN_EVENT_MINUTES = 15;
+  const calendarStyles: Record<TimelineEvent["calendarType"], string> = {
+    academics: "border border-dark/20 bg-[#4B9CD3]/15",
+    life: "border border-red-400/60 bg-red-500/20",
+  };
   const layoutEvents = React.useMemo(() => {
     type Layout = {
       id: string;
       label: string;
+      tooltip: string;
       leftPct: number;
       widthPct: number;
       showText: boolean;
       allDay: boolean;
+      className: string;
       lane: number;
       laneCount: number;
       groupId: number;
@@ -299,15 +359,19 @@ function TodayTimeline({ events }: { events: CalEvent[] }) {
         const widthPct = Math.max(2, (eventDurationMin / totalMin) * 100);
         const leftPct = (startMin / totalMin) * 100;
         const allDay = ev.allDay;
-        const label = allDay ? `${ev.title} (All-day)` : ev.title;
-        const showText = widthPct >= 6;
+        const label = ev.displayLabel;
+        const tooltip = ev.title || label;
+        const className = calendarStyles[ev.calendarType] ?? calendarStyles.academics;
+        const showText = allDay || eventDurationMin >= 60 || widthPct >= 6;
         return {
           id: ev.id,
           label,
+          tooltip,
           leftPct,
           widthPct,
           showText,
           allDay,
+          className,
           lane: 0,
           laneCount: 1,
           groupId: -1,
@@ -385,7 +449,7 @@ function TodayTimeline({ events }: { events: CalEvent[] }) {
         <div className="absolute inset-0 pt-10 pb-5">
           <div className="relative h-full">
             {layoutEvents.map((item) => {
-            const { leftPct, widthPct, label, showText, id, lane, laneCount } = item;
+            const { leftPct, widthPct, label, tooltip, showText, id, lane, laneCount, className } = item;
             const gapPct = laneCount > 1 ? 2 : 0;
             const totalGap = gapPct * (laneCount - 1);
             const heightPercent = laneCount ? Math.max(0, (100 - totalGap) / laneCount) : 100;
@@ -393,18 +457,23 @@ function TodayTimeline({ events }: { events: CalEvent[] }) {
             return (
               <div
                 key={id}
-                className="group absolute z-20 overflow-hidden rounded-md border border-dark/20 bg-[#4B9CD3]/15 backdrop-blur-sm"
+                className={cn(
+                  "group absolute z-20 overflow-hidden rounded-md backdrop-blur-sm",
+                  className
+                )}
                 style={{
                   left: `${leftPct}%`,
                   width: `${widthPct}%`,
                   top: `${topPercent}%`,
                   height: `${heightPercent}%`,
                 }}
-                title={label}
+                title={tooltip}
               >
                 {showText && (
-                  <div className="absolute inset-0 flex items-center px-2">
-                    <span className="truncate text-[11px] font-medium text-dark/80 group-hover:text-white/80">{label}</span>
+                  <div className="absolute inset-0 flex items-center justify-center px-2">
+                    <span className="inline-block origin-center -rotate-90 whitespace-nowrap text-[11px] leading-tight font-medium text-dark/80 group-hover:text-white/80">
+                      {label}
+                    </span>
                   </div>
                 )}
                 <div className="pointer-events-none absolute inset-0 rounded-md ring-0 transition group-hover:ring-2 group-hover:ring-white/40" />
