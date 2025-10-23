@@ -32,6 +32,10 @@ export const metadata: Metadata = {
     description:
       "I build human-centered data products—clean pipelines, honest analyses, and UIs people actually use.",
   },
+  icons: {
+    icon: "/Logos/image.png",
+    shortcut: "/Logos/image.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
