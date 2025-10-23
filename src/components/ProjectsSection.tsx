@@ -25,21 +25,44 @@ const projects: Project[] = [
     image: "https://secondearth.vercel.app/earth.jpg",
     label: "Data Viz",
   },
-  {
-    title: "Stroke CT Explorer",
-    description: "Interactive EDA notebooks for the Kaggle Brain Stroke dataset with reusable charting utilities.",
-    href: "https://www.kaggle.com/code/thespaceblade/brain-stroke-ct-explorer",
-    image: "https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&w=1600&q=80",
-    label: "Analytics",
-  },
-  {
-    title: "Home Lab Dashboard",
-    description: "Self-hosted Next.js dashboard on a Tailscale-enabled mini PC orchestrating services and uptime checks.",
-    href: "https://github.com/Thespaceblade/home-lab-dashboard",
-    image: "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?auto=format&fit=crop&w=1600&q=80",
-    label: "Infra",
-  },
 ];
+
+function ProjectCard({ project }: { project: Project }) {
+  return (
+    <motion.a
+      key={project.href}
+      href={project.href}
+      target={project.href.startsWith("http") ? "_blank" : undefined}
+      rel={project.href.startsWith("http") ? "noreferrer noopener" : undefined}
+      className="group relative flex h-full w-[240px] flex-shrink-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-surface shadow-[0_20px_40px_-24px_rgba(12,18,32,0.3)] transition-transform duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[#eef1f6] sm:w-[250px] lg:w-[260px]"
+      whileHover={{ y: -10 }}
+      whileTap={{ y: -2 }}
+      aria-label={`Open ${project.title}`}
+    >
+      <div className="relative h-40 overflow-hidden">
+        <img
+          src={project.image}
+          alt=""
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/20 to-black/50 opacity-90 transition-opacity duration-500 group-hover:opacity-80" />
+        <span className="absolute left-4 top-4 inline-flex items-center rounded-full bg-white/80 px-3 py-1 text-xs font-medium uppercase tracking-wide text-dark">
+          {project.label}
+        </span>
+      </div>
+
+      <div className="relative flex flex-1 flex-col items-start gap-2 p-5">
+        <h3 className="text-lg font-semibold text-dark">{project.title}</h3>
+        <p className="text-sm text-dark/70">{project.description}</p>
+        <span className="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-primary transition-all duration-500 group-hover:gap-2 group-hover:text-dark">
+          Visit project
+          <ArrowUpRight className="h-4 w-4" aria-hidden />
+        </span>
+      </div>
+    </motion.a>
+  );
+}
 
 export default function ProjectsSection() {
   return (
@@ -76,38 +99,7 @@ export default function ProjectsSection() {
         <div className="mt-12 overflow-x-auto pb-4">
           <div className="flex gap-6 justify-center">
             {projects.map((project) => (
-              <motion.a
-                key={project.href}
-                href={project.href}
-                target={project.href.startsWith("http") ? "_blank" : undefined}
-                rel={project.href.startsWith("http") ? "noreferrer noopener" : undefined}
-                className="group relative flex h-full w-[240px] flex-shrink-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-surface shadow-[0_20px_40px_-24px_rgba(12,18,32,0.3)] transition-transform duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[#eef1f6] sm:w-[250px] lg:w-[260px]"
-                whileHover={{ y: -10 }}
-                whileTap={{ y: -2 }}
-                aria-label={`Open ${project.title}`}
-              >
-                <div className="relative h-40 overflow-hidden">
-                  <img
-                    src={project.image}
-                    alt=""
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/20 to-black/50 opacity-90 transition-opacity duration-500 group-hover:opacity-80" />
-                  <span className="absolute left-4 top-4 inline-flex items-center rounded-full bg-white/80 px-3 py-1 text-xs font-medium uppercase tracking-wide text-dark">
-                    {project.label}
-                  </span>
-                </div>
-
-                <div className="relative flex flex-1 flex-col items-start gap-2 p-5">
-                  <h3 className="text-lg font-semibold text-dark">{project.title}</h3>
-                  <p className="text-sm text-dark/70">{project.description}</p>
-                  <span className="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-primary transition-all duration-500 group-hover:gap-2 group-hover:text-dark">
-                    Visit project
-                    <ArrowUpRight className="h-4 w-4" aria-hidden />
-                  </span>
-                </div>
-              </motion.a>
+              <ProjectCard key={project.href} project={project} />
             ))}
           </div>
         </div>
