@@ -19,10 +19,10 @@ const projects: Project[] = [
     label: "Analytics",
   },
   {
-    title: "Second Earth Explorer",
+    title: "Search for Second Earth",
     description: "Immersive exoplanet discovery interface charting candidates that resemble Earth, built with interactive data visualizations.",
     href: "https://secondearth.vercel.app",
-    image: "https://secondearth.vercel.app/earth.jpg",
+    image: "/Logos/second-earth.png",
     label: "Data Viz",
   },
 ];
